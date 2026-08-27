@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIKE AJOC // TERMINAL v2.0</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #07020d;
+      --crt-screen: #0d0614;
+      --amber-main: #ffb000;
+      --amber-dim: #996a00;
+      --amber-glow: rgba(255, 176, 0, 0.4);
+      --crimson-accent: #ff2a5f;
+      --green-accent: #00ff66;
+      --text-main: #ffeabf;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      /* Custom retro 8-bit SVG cursor applied globally */
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='%23ffb000' d='M0 0h2v2H0zM2 2h2v2H2zM4 4h2v2H4zM6 6h2v2H6zM8 8h2v2H8zM10 10h2v2h-2zM12 12h2v2h-2zM0 2h2v14H0zM2 14h2v2H2zM4 12h2v2H4zM6 10h6v2H6z'/></svg>"), auto;
+    }
+
+    /* Change pointer cursor on interactive elements to pixelated 8-bit hand pointer */
+    a, button, [role="button"] {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='%23ffb000' d='M8 0h4v2H8zM6 2h2v6H6zM12 2h2v4h-2zM14 4h2v4h-2zM16 6h2v4h-2zM18 8h2v6h-2zM4 8h2v8H4zM6 14h12v2H6zM8 16h8v2H8z'/></svg>"), pointer;
+    }
+
+    html {
+      overflow-y: scroll;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'VT323', monospace;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      background-image: 
+        radial-gradient(ellipse at center, #1b0a2a 0%, var(--bg-dark) 80%),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) 1px, transparent 1px, transparent 2px);
+      background-size: 100% 100%, 100% 4px;
+    }
+
+    /* --- CRT SCREEN CONTAINER --- */
+    .crt-cabinet {
+      width: 100%;
+      max-width: 1000px;
+      height: 85vh;
+      max-height: 800px;
+      min-height: 620px;
+      background-color: var(--crt-screen);
+      border: 3px solid var(--amber-main);
+      border-radius: 12px;
+      box-shadow: 
+        0 0 20px var(--amber-glow),
+        inset 0 0 40px rgba(0, 0, 0, 0.95);
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 1.5rem;
+    }
+
+    /* Scanlines Overlay */
+    .crt-cabinet::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 20;
+      background-size: 100% 4px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Screen Flicker */
+    .crt-cabinet::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 176, 0, 0.02);
+      opacity: 0;
+      z-index: 20;
+      pointer-events: none;
+      animation: flicker 0.12s infinite;
+    }
+
+    @keyframes flicker {
+      0% { opacity: 0.02; }
+      50% { opacity: 0.06; }
+      100% { opacity: 0.03; }
+    }
+
+    /* --- TOP HEADER --- */
+    header {
+      border-bottom: 2px solid var(--amber-main);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--amber-main);
+      background: var(--amber-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Chakra Petch', sans-serif;
+      font-weight: 700;
+      color: var(--bg-dark);
+      box-shadow: 0 0 8px var(--amber-main);
+    }
+
+    .brand h1 {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.5rem;
+      color: var(--amber-main);
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px var(--amber-glow);
+    }
+
+    .system-status {
+      font-size: 1.1rem;
+      color: var(--green-accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--green-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green-accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* --- LAYOUT GRID (SIDEBAR + CONTENT) --- */
+    .terminal-body {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1.5rem;
+      z-index: 10;
+      min-height: 0; /* Prevents overflow grid bug */
+    }
+
+    /* --- NAVIGATION SIDEBAR --- */
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      border-right: 1px dashed var(--amber-dim);
+      padding-right: 1rem;
+    }
+
+    .nav-label {
+      font-size: 0.9rem;
+      color: var(--amber-dim);
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    nav a {
+      color: var(--amber-main);
+      text-decoration: none;
+      font-size: 1.2rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    nav a:hover {
+      background: rgba(255, 176, 0, 0.15);
+      border-color: var(--amber-main);
+      box-shadow: inset 0 0 8px var(--amber-glow);
+      padding-left: 1rem;
+    }
+
+    nav a.active {
+      background: var(--amber-main);
+      color: var(--bg-dark);
+      font-weight: bold;
+    }
+
+    nav a.active::after {
+      content: "◄";
+      color: var(--bg-dark);
+    }
+
+    /* --- MAIN PANELS --- */
+    main {
+      overflow-y: auto;
+      padding-right: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    main::-webkit-scrollbar {
+      width: 4px;
+    }
+    main::-webkit-scrollbar-track {
+      background: rgba(255, 176, 0, 0.05);
+    }
+    main::-webkit-scrollbar-thumb {
+      background: var(--amber-main);
+    }
+
+    .hud-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      background: rgba(255, 176, 0, 0.03);
+      border: 1px solid var(--amber-dim);
+      padding: 0.6rem 1rem;
+      font-size: 1.2rem;
+    }
+
+    .metric-value {
+      color: #fff;
+    }
+
+    .panel {
+      border: 1px solid var(--amber-main);
+      background: rgba(13, 6, 20, 0.6);
+      padding: 1.2rem;
+      position: relative;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: -1px; left: 10px; right: 10px;
+      height: 1px;
+      background: var(--amber-main);
+      box-shadow: 0 0 5px var(--amber-main);
+    }
+
+    .panel-title {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1rem;
+      color: var(--amber-main);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel p {
+      font-size: 1.3rem;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+
+    .announcement-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .announcement-item {
+      border-left: 2px solid var(--crimson-accent);
+      padding-left: 0.8rem;
+      background: rgba(255, 42, 95, 0.03);
+      padding-top: 0.2rem;
+      padding-bottom: 0.2rem;
+    }
+
+    .announcement-tag {
+      color: var(--crimson-accent);
+      font-size: 1.1rem;
+      display: block;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1rem;
+      background: var(--amber-main);
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      border-top: 1px solid var(--amber-dim);
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--amber-dim);
+      z-index: 10;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Mobile Responsive Layout */
+    @media (max-width: 768px) {
+      .crt-cabinet { height: auto; min-height: 100vh; border-radius: 0; }
+      .terminal-body { grid-template-columns: 1fr; }
+      nav { border-right: none; border-bottom: 1px dashed var(--amber-dim); padding-bottom: 1rem; }
+      .hud-metrics { grid-template-columns: 1fr; gap: 0.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="crt-cabinet">
+    
+    <header>
+      <div class="brand">
+        <div class="brand-icon">Y</div>
+        <h1>MIKE AJOC // OS</h1>
+      </div>
+      <div class="system-status">
+        <span class="status-dot"></span> ONLINE
+      </div>
+    </header>
+
+    <div class="terminal-body">
+      <nav aria-label="Terminal Navigation">
+        <div class="nav-label">// NAVIGATION</div>
+        <a href="index.html" class="active" onmouseenter="playBeep(600)" onclick="playBeep(880)">HOME</a>
+        <a href="aboutme.html" onmouseenter="playBeep(600)" onclick="playBeep(880)">ABOUT ME</a>
+      </nav>
+
+      <main>
+        <div class="hud-metrics">
+          <div>SYS_MEM: <span class="metric-value">640KB</span></div>
+          <div>CREDITS: <span class="metric-value">99</span></div>
+          <div>LOC: <span class="metric-value">SECTOR-01</span></div>
+        </div>
+
+        <section class="panel">
+          <h2 class="panel-title">► INITIALIZATION LOG</h2>
+          <p>
+            &gt; WELCOME TO THE MIKE AJOC TERMINAL SYSTEM.<br>
+            &gt; EXPLORE SOFTWARE, AUDIO TRACKS, EXPERIMENTAL GAMES, AND EXTERNAL NODE LINKS USING THE SIDE DIRECTORY.<br>
+            &gt; AWAITING COMMAND<span class="cursor"></span>
+          </p>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">► SYSTEM BROADCASTS</h2>
+          <ul class="announcement-list">
+            <li class="announcement-item">
+              <span class="announcement-tag">[SYSTEM OVERHAUL]</span>
+              &gt; MAINFRAME RESTRUCTURED TO AMBER PHOSPHOR DISPLAY MODE.
+            </li>
+            <li class="announcement-item">
+              <span class="announcement-tag">[PROJECT STATUS]</span>
+              &gt; NEW EXPERIMENTAL MODULES COMPILING IN BACKGROUND...
+            </li>
+          </ul>
+        </section>
+      </main>
+    </div>
+
+    <footer>
+      <span>LOC_TIME: <span id="clock">00:00:00</span></span>
+      <span>© <span id="year"></span> MIKE AJOC</span>
+    </footer>
+
+  </div>
+
+  <script>
+    // Copyright Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Live CRT Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toTimeString().split(' ')[0];
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Dynamic Sound Synthesizer
+    function playBeep(freq = 440) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const audioCtx = new AudioContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch(e) {}
+    }
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>
